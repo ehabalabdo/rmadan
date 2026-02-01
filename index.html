@@ -26,8 +26,7 @@
     </style>
 <script>
     // Robust shim for process.env in browser
-    window.process = window.process || {};
-    window.process.env = window.process.env || {};
+    window.process = window.process || { env: {} };
 </script>
 <script type="importmap">
 {
