@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RAMADAN_SERIES_2026 } from '../constants.tsx';
+import { RAMADAN_SERIES_2026 } from '../constants';
 import { Clock, TvIcon } from './Icons';
 
 const SeriesSection: React.FC = () => {

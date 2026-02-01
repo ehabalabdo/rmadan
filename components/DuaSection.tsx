@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { VALIDATED_DUAS } from '../constants.tsx';
+import { VALIDATED_DUAS } from '../constants';
 import { Dua } from '../types';
-// Fix: Added missing BookOpenIcon to the Icons import
 import { Quote, BookOpenIcon } from './Icons';
 
 const DuaSection: React.FC = () => {

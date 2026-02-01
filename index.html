@@ -24,6 +24,10 @@
             display: none;
         }
     </style>
+<script>
+    // Shim process for browser environment to avoid reference errors
+    window.process = window.process || { env: {} };
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -39,5 +43,7 @@
 </head>
 <body class="text-white overflow-x-hidden selection:bg-amber-400 selection:text-slate-900">
     <div id="root"></div>
+    <!-- الربط بملف الجافاسكريبت الرئيسي لتشغيل التطبيق -->
+    <script type="module" src="index.tsx"></script>
 </body>
 </html>
