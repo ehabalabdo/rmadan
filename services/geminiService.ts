@@ -1,11 +1,28 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+// تحسين استرجاع المفتاح ليشمل الفئات الشائعة في بيئات Vite و Vercel
+const getApiKey = () => {
+  return (
+    process.env.API_KEY || 
+    (process.env as any).VITE_API_KEY || 
+    (window as any).process?.env?.API_KEY || 
+    (window as any).process?.env?.VITE_API_KEY || 
+    ""
+  );
+};
+
 const SYSTEM_PROMPT = `أنت طباخ شامي خبير. اقترح طبخة من المطبخ الشامي حصراً (سوري/أردني/لبناني/فلسطيني) بناءً على المكونات المدخلة. الطعام يجب أن يكون حلالاً 100%. اقترح معها مشروباً رمضانياً تقليدياً (مثل التمر الهندي، الجلاب). المخرجات يجب أن تكون قصيرة ومقادير دقيقة، وبلغة عربية ودودة.`;
 
 export const getChefRecommendation = async (ingredients: string): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.error("Gemini API Error: API Key is missing. Ensure you use VITE_API_KEY in Vercel settings.");
+      return "خطأ: لم يتم العثور على مفتاح البرمجة. يرجى تغيير اسم المتغير في Vercel إلى VITE_API_KEY وإعادة بناء المشروع (Redeploy).";
+    }
+    
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: ingredients,
@@ -17,13 +34,19 @@ export const getChefRecommendation = async (ingredients: string): Promise<string
     return response.text || "عذراً، لم أستطع العثور على وصفة مناسبة حالياً.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "حدث خطأ في الاتصال بالذكاء الاصطناعي. تأكد من صحة مفتاح API_KEY في إعدادات المشروع.";
+    return "حدث خطأ في الاتصال بالذكاء الاصطناعي. يرجى التأكد من إعدادات VITE_API_KEY.";
   }
 };
 
 export const generateQuizQuestion = async (previousQuestions: string[]): Promise<any> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.error("Gemini API Error: API Key is missing.");
+      return null;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `ولد لي سؤالاً ثقافياً عاماً جديداً لم يسبق طرحه (لا تكرر: ${previousQuestions.join(', ')}). السؤال يجب أن يكون ممتعاً ومناسباً لجو رمضان الثقافي.`,
@@ -55,7 +78,10 @@ export const generateQuizQuestion = async (previousQuestions: string[]): Promise
 
 export const analyzeIntelligence = async (score: number): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    if (!apiKey) return "أداء رائع! استمر في المحاولة.";
+
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `حلل ذكاء المستخدم الذي حصل على ${score} نقاط في مسابقة ثقافية.`,
@@ -72,7 +98,10 @@ export const analyzeIntelligence = async (score: number): Promise<string> => {
 
 export const generateGreetingImage = async (name: string, occasion: string): Promise<string | null> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    if (!apiKey) return null;
+    
+    const ai = new GoogleGenAI({ apiKey });
     const prompt = `A premium, ultra-high-quality Ramadan greeting card. The design features exquisite 3D golden Islamic geometric patterns, glowing ornate lanterns (Fanous), and a beautiful crescent moon. The color palette is a sophisticated deep royal blue and metallic gold. 
     CRITICAL REQUIREMENT: Include prominent, elegant, and perfectly rendered ARABIC CALLIGRAPHY as the centerpiece of the design. The calligraphy must clearly say "رمضان كريم" (Ramadan Kareem) and elegantly include the name "${name}". 
     The text should be integrated into the artwork using a professional Arabic font style (like Thuluth or Diwani). The atmosphere is spiritual, celebratory, and luxurious. 4K resolution, professional digital art.`;
