@@ -202,7 +202,7 @@ const GreetingGenerator: React.FC = () => {
           />
         </div>
         <div className="text-[10px] text-amber-200/70 bg-amber-400/5 p-4 rounded-2xl border border-amber-400/10 mb-2 leading-relaxed">
-          <SparklesIcon size={12} className="inline ml-1 text-amber-400" /> سيقوم <strong>Gemini</strong> بتصميم بطاقة إسلامية فاخرة تتضمن <strong>اسم الشخص بالخط العربي</strong> تلقائياً داخل الصورة.
+          <SparklesIcon size={12} className="inline ml-1 text-amber-400" /> سيتم تصميم بطاقة إسلامية فاخرة تتضمن <strong>اسم الشخص</strong> تلقائياً داخل الصورة.
         </div>
         <motion.button
           whileTap={{ scale: 0.98 }}
