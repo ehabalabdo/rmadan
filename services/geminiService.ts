@@ -102,7 +102,7 @@ export const generateGreetingImage = async (name: string, occasion: string): Pro
     const prompt = `A premium, ultra-high-quality Ramadan greeting card with name "${name}". Professional Arabic calligraphy saying "رمضان كريم يا ${name}". Luxurious golden Islamic geometric patterns, crescent moon and stars on deep royal blue background. Elegant border with arabesque ornaments. 4K digital art style.`;
     
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3-pro-image-preview',
       contents: prompt,
       config: {
         responseModalities: ['Text', 'Image'],
