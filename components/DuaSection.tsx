@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VALIDATED_DUAS } from '../constants';
 import { Dua } from '../types';
@@ -7,12 +7,16 @@ import { Quote, BookOpenIcon } from './Icons';
 
 const DuaSection: React.FC = () => {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
+  const duaRef = useRef<HTMLDivElement>(null);
   const categories = Array.from(new Set(VALIDATED_DUAS.map(d => d.category)));
 
   const getRandomDua = (cat: string) => {
     const filtered = VALIDATED_DUAS.filter(d => d.category === cat);
     const randomIndex = Math.floor(Math.random() * filtered.length);
     setSelectedDua(filtered[randomIndex]);
+    setTimeout(() => {
+      duaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   return (
@@ -40,7 +44,8 @@ const DuaSection: React.FC = () => {
 
       <AnimatePresence mode="wait">
         {selectedDua ? (
-          <motion.div 
+          <motion.div
+            ref={duaRef}
             key={selectedDua.id}
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
