@@ -102,16 +102,18 @@ export const generateGreetingImage = async (name: string, occasion: string): Pro
     const prompt = `A premium, ultra-high-quality Ramadan greeting card with name "${name}". Professional Arabic calligraphy saying "رمضان كريم ${name}". Luxurious golden Islamic patterns on deep blue background. 4K digital art style.`;
     
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: {
-        parts: [{ text: prompt }],
+      model: 'gemini-2.0-flash-exp',
+      contents: prompt,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'],
       },
     });
 
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if ((part as any).inlineData) {
-          return `data:image/png;base64,${(part as any).inlineData.data}`;
+          const mimeType = (part as any).inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${(part as any).inlineData.data}`;
         }
       }
     }

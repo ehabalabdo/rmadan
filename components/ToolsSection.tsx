@@ -164,12 +164,6 @@ const GreetingGenerator: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Check for API key if using Pro model
-      const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-      if (!hasKey) {
-        await (window as any).aistudio.openSelectKey();
-      }
-
       const generatedImage = await generateGreetingImage(name, occasion);
       if (generatedImage) {
         setImageUrl(generatedImage);
@@ -177,12 +171,8 @@ const GreetingGenerator: React.FC = () => {
         setError("فشل توليد الصورة، يرجى المحاولة لاحقاً.");
       }
     } catch (err: any) {
-      if (err.message?.includes("Requested entity was not found")) {
-        setError("يرجى اختيار مفتاح API صالح من مشروع مدفوع.");
-        await (window as any).aistudio.openSelectKey();
-      } else {
-        setError("حدث خطأ أثناء توليد الصورة.");
-      }
+      console.error("Image generation error:", err);
+      setError("حدث خطأ أثناء توليد الصورة. تأكد من صلاحية مفتاح API.");
     } finally {
       setLoading(false);
     }
@@ -212,7 +202,7 @@ const GreetingGenerator: React.FC = () => {
           />
         </div>
         <div className="text-[10px] text-amber-200/70 bg-amber-400/5 p-4 rounded-2xl border border-amber-400/10 mb-2 leading-relaxed">
-          <SparklesIcon size={12} className="inline ml-1 text-amber-400" /> سيقوم <strong>Gemini 3 Pro</strong> بتصميم بطاقة إسلامية فاخرة تتضمن <strong>اسم الشخص بالخط العربي</strong> تلقائياً داخل الصورة.
+          <SparklesIcon size={12} className="inline ml-1 text-amber-400" /> سيقوم <strong>Gemini</strong> بتصميم بطاقة إسلامية فاخرة تتضمن <strong>اسم الشخص بالخط العربي</strong> تلقائياً داخل الصورة.
         </div>
         <motion.button
           whileTap={{ scale: 0.98 }}
