@@ -1,17 +1,27 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// دالة مساعدة لضمان جلب المفتاح بأي مسمى متاح
-const getSafeApiKey = () => {
-  return process.env.API_KEY || (process.env as any).VITE_API_KEY || "";
+/**
+ * ملاحظة هامة للمطور:
+ * - لا نستخدم GoogleGenerativeAI لأنه "Deprecated" (ملغى).
+ * - نستخدم GoogleGenAI مع التمرير الصحيح { apiKey: process.env.API_KEY }.
+ * - في إعدادات Vercel، يرجى التأكد من وجود متغير باسم API_KEY.
+ */
+
+const getAIInstance = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.error("خطأ: مفتاح API_KEY غير موجود في إعدادات البيئة.");
+    throw new Error("API_KEY_MISSING");
+  }
+  return new GoogleGenAI({ apiKey });
 };
 
 const SYSTEM_PROMPT = `أنت طباخ شامي خبير. اقترح طبخة من المطبخ الشامي حصراً (سوري/أردني/لبناني/فلسطيني) بناءً على المكونات المدخلة. الطعام يجب أن يكون حلالاً 100%. اقترح معها مشروباً رمضانياً تقليدياً (مثل التمر الهندي، الجلاب). المخرجات يجب أن تكون قصيرة ومقادير دقيقة، وبلغة عربية ودودة.`;
 
 export const getChefRecommendation = async (ingredients: string): Promise<string> => {
   try {
-    const apiKey = getSafeApiKey();
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = getAIInstance();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: ingredients,
@@ -21,16 +31,16 @@ export const getChefRecommendation = async (ingredients: string): Promise<string
       },
     });
     return response.text || "عذراً، لم أستطع العثور على وصفة مناسبة حالياً.";
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "حدث خطأ في الاتصال بالذكاء الاصطناعي. تأكد من أن مفتاح VITE_API_KEY صحيح في إعدادات Vercel.";
+  } catch (error: any) {
+    console.error("Gemini Chef Error:", error);
+    if (error.message === "API_KEY_MISSING") return "يرجى إضافة API_KEY في إعدادات Vercel.";
+    return "حدث خطأ أثناء التواصل مع الشيف. حاول مرة أخرى.";
   }
 };
 
 export const generateQuizQuestion = async (previousQuestions: string[]): Promise<any> => {
   try {
-    const apiKey = getSafeApiKey();
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = getAIInstance();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `ولد لي سؤالاً ثقافياً عاماً جديداً لم يسبق طرحه (لا تكرر: ${previousQuestions.join(', ')}). السؤال يجب أن يكون ممتعاً ومناسباً لجو رمضان الثقافي.`,
@@ -62,8 +72,7 @@ export const generateQuizQuestion = async (previousQuestions: string[]): Promise
 
 export const analyzeIntelligence = async (score: number): Promise<string> => {
   try {
-    const apiKey = getSafeApiKey();
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = getAIInstance();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `حلل ذكاء المستخدم الذي حصل على ${score} نقاط في مسابقة ثقافية.`,
@@ -80,11 +89,13 @@ export const analyzeIntelligence = async (score: number): Promise<string> => {
 
 export const generateGreetingImage = async (name: string, occasion: string): Promise<string | null> => {
   try {
-    const apiKey = getSafeApiKey();
-    const ai = new GoogleGenAI({ apiKey });
-    const prompt = `A premium, ultra-high-quality Ramadan greeting card. The design features exquisite 3D golden Islamic geometric patterns, glowing ornate lanterns (Fanous), and a beautiful crescent moon. The color palette is a sophisticated deep royal blue and metallic gold. 
-    CRITICAL REQUIREMENT: Include prominent, elegant, and perfectly rendered ARABIC CALLIGRAPHY as the centerpiece of the design. The calligraphy must clearly say "رمضان كريم" (Ramadan Kareem) and elegantly include the name "${name}". 
-    The text should be integrated into the artwork using a professional Arabic font style (like Thuluth or Diwani). The atmosphere is spiritual, celebratory, and luxurious. 4K resolution, professional digital art.`;
+    const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+    if (!hasKey) {
+      await (window as any).aistudio.openSelectKey();
+    }
+    
+    const ai = getAIInstance();
+    const prompt = `A premium, ultra-high-quality Ramadan greeting card with name "${name}". Professional Arabic calligraphy saying "رمضان كريم ${name}". Luxurious golden Islamic patterns on deep blue background. 4K digital art style.`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
@@ -107,8 +118,11 @@ export const generateGreetingImage = async (name: string, occasion: string): Pro
       }
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Image Generation Error:", error);
+    if (error.message?.includes("entity was not found")) {
+      await (window as any).aistudio.openSelectKey();
+    }
     throw error;
   }
 };
