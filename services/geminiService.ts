@@ -97,151 +97,29 @@ export const analyzeIntelligence = async (score: number): Promise<string> => {
 };
 
 export const generateGreetingImage = async (name: string, occasion: string): Promise<string | null> => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
-  canvas.width = 1080;
-  canvas.height = 1080;
+  try {
+    const ai = getAIInstance();
+    const prompt = `A premium, ultra-high-quality Ramadan greeting card with name "${name}". Professional Arabic calligraphy saying "رمضان كريم يا ${name}". Luxurious golden Islamic geometric patterns, crescent moon and stars on deep royal blue background. Elegant border with arabesque ornaments. 4K digital art style.`;
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-preview-image-generation',
+      contents: prompt,
+      config: {
+        responseModalities: ['Text', 'Image'],
+      },
+    });
 
-  // Background gradient
-  const bgGrad = ctx.createRadialGradient(540, 540, 100, 540, 540, 700);
-  bgGrad.addColorStop(0, '#1a1a3e');
-  bgGrad.addColorStop(0.5, '#0f0f2d');
-  bgGrad.addColorStop(1, '#050515');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1080, 1080);
-
-  // Decorative circles
-  const drawGlowCircle = (x: number, y: number, r: number, alpha: number) => {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(251, 191, 36, ${alpha})`);
-    g.addColorStop(1, 'rgba(251, 191, 36, 0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  drawGlowCircle(540, 200, 300, 0.08);
-  drawGlowCircle(200, 800, 200, 0.05);
-  drawGlowCircle(900, 700, 250, 0.06);
-
-  // Decorative border
-  ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(40, 40, 1000, 1000, 30);
-  ctx.stroke();
-
-  ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(55, 55, 970, 970, 25);
-  ctx.stroke();
-
-  // Islamic star pattern at top
-  const drawStar = (cx: number, cy: number, size: number, alpha: number) => {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.fillStyle = `rgba(251, 191, 36, ${alpha})`;
-    for (let i = 0; i < 8; i++) {
-      ctx.rotate(Math.PI / 4);
-      ctx.beginPath();
-      ctx.moveTo(0, -size);
-      ctx.lineTo(size * 0.2, -size * 0.2);
-      ctx.lineTo(size, 0);
-      ctx.lineTo(size * 0.2, size * 0.2);
-      ctx.lineTo(0, size);
-      ctx.lineTo(-size * 0.2, size * 0.2);
-      ctx.lineTo(-size, 0);
-      ctx.lineTo(-size * 0.2, -size * 0.2);
-      ctx.closePath();
-      ctx.fill();
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if ((part as any).inlineData) {
+          const mimeType = (part as any).inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${(part as any).inlineData.data}`;
+        }
+      }
     }
-    ctx.restore();
-  };
-
-  drawStar(540, 220, 60, 0.15);
-  drawStar(150, 150, 20, 0.1);
-  drawStar(930, 150, 20, 0.1);
-  drawStar(150, 930, 20, 0.1);
-  drawStar(930, 930, 20, 0.1);
-
-  // Crescent moon
-  ctx.save();
-  ctx.translate(540, 320);
-  ctx.fillStyle = 'rgba(251, 191, 36, 0.9)';
-  ctx.beginPath();
-  ctx.arc(0, 0, 55, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#0f0f2d';
-  ctx.beginPath();
-  ctx.arc(18, -10, 45, 0, Math.PI * 2);
-  ctx.fill();
-  // Star next to crescent
-  ctx.fillStyle = 'rgba(251, 191, 36, 0.9)';
-  ctx.beginPath();
-  ctx.arc(-35, -40, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // "رمضان كريم" text
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#fbbf24';
-  ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
-  ctx.shadowBlur = 30;
-  ctx.font = 'bold 90px "Segoe UI", "Arial", sans-serif';
-  ctx.fillText('رمضان كريم', 540, 500);
-  ctx.shadowBlur = 0;
-
-  // Decorative line
-  const lineGrad = ctx.createLinearGradient(240, 530, 840, 530);
-  lineGrad.addColorStop(0, 'rgba(251, 191, 36, 0)');
-  lineGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.6)');
-  lineGrad.addColorStop(1, 'rgba(251, 191, 36, 0)');
-  ctx.strokeStyle = lineGrad;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(240, 535);
-  ctx.lineTo(840, 535);
-  ctx.stroke();
-
-  // Diamond shape
-  ctx.fillStyle = 'rgba(251, 191, 36, 0.7)';
-  ctx.beginPath();
-  ctx.moveTo(540, 550);
-  ctx.lineTo(548, 560);
-  ctx.lineTo(540, 570);
-  ctx.lineTo(532, 560);
-  ctx.closePath();
-  ctx.fill();
-
-  // Person name
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-  ctx.shadowBlur = 20;
-  ctx.font = 'bold 65px "Segoe UI", "Arial", sans-serif';
-  ctx.fillText(name, 540, 660);
-  ctx.shadowBlur = 0;
-
-  // Occasion/subtitle
-  ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
-  ctx.font = '32px "Segoe UI", "Arial", sans-serif';
-  ctx.fillText('مبارك عليكم الشهر الفضيل', 540, 730);
-
-  // Dua at bottom
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-  ctx.font = '26px "Segoe UI", "Arial", sans-serif';
-  ctx.fillText('تقبّل الله منّا ومنكم صالح الأعمال', 540, 870);
-
-  // Small decorative dots
-  for (let i = 0; i < 50; i++) {
-    const x = Math.random() * 1080;
-    const y = Math.random() * 1080;
-    const r = Math.random() * 2;
-    ctx.fillStyle = `rgba(251, 191, 36, ${Math.random() * 0.15})`;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+    return null;
+  } catch (error: any) {
+    console.error("Image Generation Error:", error);
+    throw error;
   }
-
-  return canvas.toDataURL('image/png');
 };
