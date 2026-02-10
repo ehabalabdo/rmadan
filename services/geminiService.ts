@@ -2,16 +2,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 /**
- * ملاحظة هامة للمطور:
- * - لا نستخدم GoogleGenerativeAI لأنه "Deprecated" (ملغى).
- * - نستخدم GoogleGenAI مع التمرير الصحيح { apiKey: process.env.API_KEY }.
- * - في إعدادات Vercel، يرجى التأكد من وجود متغير باسم API_KEY.
+ * خدمة Gemini API:
+ * - يتم الحصول على المفتاح حصراً من process.env.API_KEY كما تتطلب تعليمات النظام الأساسي.
+ * - ملاحظة: في Vite داخل هذه المنصة، يتم حقن المتغيرات تلقائياً في process.env.
+ * - تأكد من تسمية المتغير في Vercel بـ "API_KEY" لضمان التوافق التام.
  */
 
+const getApiKey = () => {
+  const key = process.env.API_KEY;
+  // فحص ما إذا كان المفتاح موجوداً أو عبارة عن نص غير معرف
+  if (!key || key === 'undefined' || key.trim() === '') {
+    return null;
+  }
+  return key;
+};
+
 const getAIInstance = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) {
-    console.error("خطأ: مفتاح API_KEY غير موجود في إعدادات البيئة.");
     throw new Error("API_KEY_MISSING");
   }
   return new GoogleGenAI({ apiKey });
@@ -33,8 +41,10 @@ export const getChefRecommendation = async (ingredients: string): Promise<string
     return response.text || "عذراً، لم أستطع العثور على وصفة مناسبة حالياً.";
   } catch (error: any) {
     console.error("Gemini Chef Error:", error);
-    if (error.message === "API_KEY_MISSING") return "يرجى إضافة API_KEY في إعدادات Vercel.";
-    return "حدث خطأ أثناء التواصل مع الشيف. حاول مرة أخرى.";
+    if (error.message === "API_KEY_MISSING") {
+      return "⚠️ مفتاح API غير موجود. يرجى التأكد من وجود متغير باسم API_KEY في إعدادات Vercel.";
+    }
+    return "عذراً، حدث خطأ أثناء التواصل مع الشيف. يرجى المحاولة لاحقاً.";
   }
 };
 
@@ -89,12 +99,14 @@ export const analyzeIntelligence = async (score: number): Promise<string> => {
 
 export const generateGreetingImage = async (name: string, occasion: string): Promise<string | null> => {
   try {
+    // التحقق من وجود مفتاح API للصور (يتطلب مفتاحاً مدفوعاً)
     const hasKey = await (window as any).aistudio.hasSelectedApiKey();
     if (!hasKey) {
       await (window as any).aistudio.openSelectKey();
     }
     
-    const ai = getAIInstance();
+    // إنشاء نسخة جديدة دائماً لضمان استخدام أحدث مفتاح من الحوار
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = `A premium, ultra-high-quality Ramadan greeting card with name "${name}". Professional Arabic calligraphy saying "رمضان كريم ${name}". Luxurious golden Islamic patterns on deep blue background. 4K digital art style.`;
     
     const response = await ai.models.generateContent({
@@ -120,7 +132,8 @@ export const generateGreetingImage = async (name: string, occasion: string): Pro
     return null;
   } catch (error: any) {
     console.error("Image Generation Error:", error);
-    if (error.message?.includes("entity was not found")) {
+    // إعادة فتح اختيار المفتاح إذا كان هناك خطأ في صلاحية المفتاح
+    if (error.message?.includes("entity was not found") || error.message?.includes("invalid")) {
       await (window as any).aistudio.openSelectKey();
     }
     throw error;
